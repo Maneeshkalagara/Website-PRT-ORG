@@ -1,0 +1,27 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    dockerImage = docker.build("maneeshk712/website-prt-org")
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub_credentials') {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+        stage('Kubernetes Deploy') {
+            steps {
+                sh 'kubectl apply -f k8s/deployment.yaml'
+                sh 'kubectl apply -f k8s/service.yaml'
+            }
+        }
+    }
+}
